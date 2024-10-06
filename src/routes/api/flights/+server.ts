@@ -5,6 +5,14 @@ export async function GET({ url }) {
 		// Get the 'aircraft' parameter from the query string
 		const aircraft = url.searchParams.get('aircraft');
 
+		let query =
+			'SELECT pilot, SUM(hours) AS total_hours FROM flights WHERE aircraft = ? GROUP BY pilot ORDER BY total_hours DESC';
+
+		if (aircraft) {
+			const flights = db.prepare(query).all(aircraft) as { pilot: string; total_hours: number }[];
+			return new Response(JSON.stringify(flights), { status: 200 });
+		}
+
 		// First query: Get total hours per pilot
 		let query1 =
 			'SELECT pilot, SUM(hours) AS total_hours FROM flights GROUP BY pilot ORDER BY total_hours DESC';
