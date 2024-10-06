@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { aircraft } = $props();
+	import { selectedAircraft, selectedMonth } from '$lib/stores';
 
 	type Flight = {
 		pilot: string;
@@ -8,11 +8,13 @@
 	};
 
 	let flights = $state<Flight[]>([]);
+	let month = $state<number | null>(null);
+	let aircraft = $state('');
 
-	aircraft = aircraft || '';
 	async function fetchFlights() {
 		const query = new URLSearchParams({
-			aircraft: aircraft as string
+			aircraft: aircraft as string,
+			month: month?.toString() || '3'
 		}).toString();
 
 		const res = await fetch(`/api/flights?${query}`);
@@ -20,6 +22,9 @@
 	}
 
 	$effect(() => {
+		selectedAircraft.subscribe((value) => (aircraft = value));
+		selectedMonth.subscribe((value) => (month = value));
+		console.log('month in flights: ', month);
 		fetchFlights();
 	});
 
@@ -48,12 +53,6 @@
 
 		const totalBarWidth = (pilotTotalHours / maxTotalHours) * maxWidth;
 		return (aircraftHours / pilotTotalHours) * totalBarWidth;
-	}
-
-	function getPilotTotalHours(pilot: string) {
-		return flights
-			.filter((f) => f.pilot === pilot)
-			.reduce((sum, flight) => sum + flight.total_hours, 0);
 	}
 </script>
 

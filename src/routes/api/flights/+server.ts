@@ -4,7 +4,11 @@ export async function GET({ url }) {
 	try {
 		// Get the 'aircraft' parameter from the query string
 		const aircraft = url.searchParams.get('aircraft');
+		const month = url.searchParams.get('month');
 
+		if (month) {
+			console.log('month: ', month);
+		}
 		let query =
 			'SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours FROM flights f JOIN members m ON f.pilot = m.id WHERE f.aircraft = ?  GROUP BY m.display_name, f.aircraft ORDER BY aircraft_hours DESC';
 
