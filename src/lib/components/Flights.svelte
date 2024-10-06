@@ -19,9 +19,16 @@
 	}
 
 	$effect(() => {
-		console.log($inspect(flights));
 		fetchFlights();
 	});
+
+	// Function to calculate the bar width for each pilot
+	const calculateWidth = (hours: number) => {
+		// Find min and max hours
+		const maxHours = Math.max(...flights.map((flight) => flight.total_hours));
+		const minHours = Math.min(...flights.map((flight) => flight.total_hours));
+		return ((hours - minHours) / (maxHours - minHours)) * (300 - 5) + 5;
+	};
 </script>
 
 <div class="flight-hours-wrapper">
@@ -29,7 +36,7 @@
 		<thead>
 			<tr class="header-row">
 				<th>Pilot</th>
-				<th>Hours</th>
+				<th>Bar</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -37,7 +44,17 @@
 				{#if flight.pilot}
 					<tr class="pilot-row">
 						<td>{flight.pilot}</td>
-						<td>{flight.total_hours.toFixed(1)}</td>
+						<td
+							><div class="bar-container">
+								<div
+									class="bar"
+									style="background-color: #4caf50; height: 10px; width: {calculateWidth(
+										flight.total_hours
+									)}px;"
+								></div>
+								<span class="hours-label">{flight.total_hours.toFixed(1)}</span>
+							</div></td
+						>
 					</tr>
 				{/if}
 			{/each}
@@ -60,5 +77,18 @@
 		width: fit-content;
 		margin: 0.1rem;
 		border-radius: 3rem;
+	}
+	.bar-container {
+		display: flex;
+		align-items: center;
+	}
+
+	.bar {
+		margin-right: 10px; /* Space between the bar and the hours */
+	}
+
+	.hours-label {
+		font-size: 0.9rem;
+		white-space: nowrap; /* Prevents breaking into multiple lines */
 	}
 </style>
