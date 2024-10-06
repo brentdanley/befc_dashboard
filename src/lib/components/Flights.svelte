@@ -4,6 +4,7 @@
 	type Flight = {
 		pilot: string;
 		total_hours: number;
+		aircraft: string;
 	};
 
 	let flights = $state<Flight[]>([]);
@@ -22,13 +23,38 @@
 		fetchFlights();
 	});
 
-	// Function to calculate the bar width for each pilot
-	const calculateWidth = (hours: number) => {
-		// Find min and max hours
-		const maxHours = Math.max(...flights.map((flight) => flight.total_hours));
-		const minHours = Math.min(...flights.map((flight) => flight.total_hours));
-		return ((hours - minHours) / (maxHours - minHours)) * (300 - 5) + 5;
+	const aircraftColors: { [key: string]: string } = {
+		N8181N: '#ff6347', // Red
+		N4818D: '#1e90ff' // Blue
 	};
+
+	// Function to calculate the segment width for each aircraft
+	function calculateSegmentWidth(
+		aircraftHours: number,
+		pilotTotalHours: number,
+		maxWidth: number = 300
+	) {
+		const maxTotalHours = Math.max(
+			...flights.map((f) =>
+				flights
+					.filter((flight) => flight.pilot === f.pilot)
+					.reduce((sum, flight) => sum + flight.total_hours, 0)
+			)
+		);
+
+		if (maxTotalHours === 0) {
+			return 0; // Handle zero flights case
+		}
+
+		const totalBarWidth = (pilotTotalHours / maxTotalHours) * maxWidth;
+		return (aircraftHours / pilotTotalHours) * totalBarWidth;
+	}
+
+	function getPilotTotalHours(pilot: string) {
+		return flights
+			.filter((f) => f.pilot === pilot)
+			.reduce((sum, flight) => sum + flight.total_hours, 0);
+	}
 </script>
 
 <div class="flight-hours-wrapper">
@@ -36,25 +62,31 @@
 		<thead>
 			<tr class="header-row">
 				<th>Pilot</th>
-				<th>Bar</th>
+				<th>Hours</th>
 			</tr>
 		</thead>
 		<tbody>
-			{#each flights as flight}
-				{#if flight.pilot}
-					<tr class="pilot-row">
-						<td>{flight.pilot}</td>
-						<td
-							><div class="bar-container">
-								<div
-									class="bar"
-									style="background-color: #4caf50; height: 10px; width: {calculateWidth(
-										flight.total_hours
-									)}px;"
-								></div>
-								<span class="hours-label">{flight.total_hours.toFixed(1)}</span>
-							</div></td
-						>
+			{#each flights as pilot}
+				{#if pilot.pilot}
+					<tr>
+						<td>{pilot.pilot}</td>
+						<td>
+							<div class="bar-container">
+								{#each pilot.aircrafts as aircraft}
+									<div
+										class="bar"
+										style="background-color: {aircraftColors[
+											aircraft.aircraft
+										]}; width: {calculateSegmentWidth(
+											aircraft.aircraft_hours,
+											pilot.total_hours
+										)}px;"
+									></div>
+								{/each}
+								<span class="hours-label">{pilot.total_hours.toFixed(1)}</span>
+								<!-- Label moved here -->
+							</div>
+						</td>
 					</tr>
 				{/if}
 			{/each}
@@ -70,25 +102,20 @@
 		font-family: 'Courier New', Courier, monospace;
 	}
 	.header-row {
-		font-family: 1.2rem;
-	}
-	.pilot-row {
-		padding: 0.5rem 1rem;
-		width: fit-content;
-		margin: 0.1rem;
-		border-radius: 3rem;
+		font-size: 1.2rem;
 	}
 	.bar-container {
 		display: flex;
 		align-items: center;
+		margin-left: 10px;
 	}
 
 	.bar {
-		margin-right: 10px; /* Space between the bar and the hours */
+		height: 10px;
+		margin-right: 2px; /* Adjust spacing between segments */
 	}
 
 	.hours-label {
-		font-size: 0.9rem;
-		white-space: nowrap; /* Prevents breaking into multiple lines */
+		margin-left: 10px;
 	}
 </style>
