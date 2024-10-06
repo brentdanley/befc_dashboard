@@ -12,7 +12,7 @@
 </main>
 
 <footer>
-	<p>Brent Danley © 2024</p>
+	<p>Brent Danley © {new Date().getFullYear()}</p>
 </footer>
 
 <style>
