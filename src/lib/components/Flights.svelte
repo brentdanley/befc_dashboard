@@ -1,26 +1,25 @@
 <script lang="ts">
-	import { selectedAircraft } from '$lib/stores';
-	import { onMount } from 'svelte';
-	let props = $props();
-	console.log(props.data);
-	let flights = $state(props.data);
-	let aircraft = $state('');
+	let { aircraft } = $props();
 
+	type Flight = {
+		pilot: string;
+		total_hours: number;
+	};
+
+	let flights = $state<Flight[]>([]);
+
+	aircraft = aircraft || '';
 	async function fetchFlights() {
-		const response = await fetch(`/api/flights?aircraft=${aircraft}`);
-		flights = await response.json();
+		const query = new URLSearchParams({
+			aircraft: aircraft as string
+		}).toString();
+
+		const res = await fetch(`/api/flights?${query}`);
+		flights = await res.json();
 	}
 
-	onMount(() => {
-		console.log('onMount, aircraft:', aircraft);
-
-		if (aircraft !== undefined) {
-			fetchFlights(); // Initial fetch when component mounts
-		}
-	});
-
-	selectedAircraft.subscribe((value) => {
-		aircraft = value;
+	$effect(() => {
+		console.log($inspect(flights));
 		fetchFlights();
 	});
 </script>
