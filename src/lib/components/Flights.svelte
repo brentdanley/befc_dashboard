@@ -58,6 +58,7 @@
 </script>
 
 <div class="flight-hours-wrapper">
+	<h3 class="heading">Pilot Flight Hours</h3>
 	<table class="flight-hours-table">
 		<thead>
 			<tr class="header-row">
@@ -97,6 +98,15 @@
 <style>
 	.flight-hours-wrapper {
 		margin: 2rem;
+		border: 2px solid black;
+		padding: 2rem;
+		display: inline-block;
+	}
+
+	.heading {
+		text-align: center;
+		margin: 0 0 2rem;
+		font-size: 1.8rem;
 	}
 	.flight-hours-table {
 		font-family: 'Courier New', Courier, monospace;

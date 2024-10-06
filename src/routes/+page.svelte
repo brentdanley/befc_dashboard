@@ -12,7 +12,5 @@
 	});
 </script>
 
-<h1>BEFC Pilot Dashboard</h1>
-
 <AircraftFilter />
 <Flights {aircraft} />
