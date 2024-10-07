@@ -1,61 +1,122 @@
 import db from '$lib/db';
 
+type Flight = { pilot: string; aircraft: string; aircraft_hours: number };
+
 export async function GET({ url }) {
 	try {
-		// Get the 'aircraft' parameter from the query string
 		const aircraft = url.searchParams.get('aircraft');
 		const month = url.searchParams.get('month');
 
-		if (month) {
-			console.log('month: ', month);
-		}
-		let query =
-			'SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours FROM flights f JOIN members m ON f.pilot = m.id WHERE f.aircraft = ?  GROUP BY m.display_name, f.aircraft ORDER BY aircraft_hours DESC';
-
 		if (aircraft) {
-			const flights = db.prepare(query).all(aircraft) as {
-				pilot: string;
-				aircraft: string;
-				aircraft_hours: number;
-			}[];
+			// Case when an aircraft is selected, optionally filter by month
+			let query = `SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours 
+                         FROM flights f 
+                         JOIN members m ON f.pilot = m.id 
+                         WHERE f.aircraft = ?`;
 
-			// Convert this into the combined format expected
-			const combinedResults = flights.map((flight) => ({
-				pilot: flight.pilot,
-				total_hours: flight.aircraft_hours, // total hours for this aircraft
-				aircrafts: [{ aircraft: flight.aircraft, aircraft_hours: flight.aircraft_hours }] // single aircraft in an array
-			}));
+			let params = [aircraft];
+
+			if (month) {
+				query += " AND strftime('%m', f.depart_date) = ?";
+				params.push(month.padStart(2, '0')); // Ensure the month is two digits
+			}
+
+			query += ' GROUP BY m.display_name, f.aircraft ORDER BY aircraft_hours DESC';
+
+			const flights = db.prepare(query).all(...params) as Flight[];
+
+			const combinedResults = flights.reduce(
+				(
+					acc: {
+						pilot: string;
+						total_hours: number;
+						aircrafts: { aircraft: string; aircraft_hours: number }[];
+					}[],
+					flight: Flight
+				) => {
+					// Check if pilot already exists in the results
+					const existingPilot = acc.find((p) => p.pilot === flight.pilot);
+
+					if (existingPilot) {
+						// Add aircraft_hours to the total_hours and push this aircraft
+						existingPilot.total_hours += flight.aircraft_hours;
+						existingPilot.aircrafts.push({
+							aircraft: flight.aircraft,
+							aircraft_hours: flight.aircraft_hours
+						});
+					} else {
+						// Add new pilot entry
+						acc.push({
+							pilot: flight.pilot,
+							total_hours: flight.aircraft_hours,
+							aircrafts: [{ aircraft: flight.aircraft, aircraft_hours: flight.aircraft_hours }]
+						});
+					}
+
+					return acc;
+				},
+				[]
+			);
+
+			// Sort the combined results by total_hours in descending order
+			combinedResults.sort((a, b) => b.total_hours - a.total_hours);
 
 			return new Response(JSON.stringify(combinedResults), { status: 200 });
 		}
 
-		// First query: Get total hours per pilot
-		let query1 =
-			'SELECT m.display_name AS pilot, SUM(f.hours) AS total_hours FROM flights f LEFT JOIN members m ON m.id = f.pilot GROUP BY f.pilot ORDER BY total_hours DESC';
+		// Case when no specific aircraft is selected, optionally filter by month
+		let query = `SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours 
+                     FROM flights f 
+                     JOIN members m ON f.pilot = m.id`;
 
-		// Execute the query to get total hours per pilot
-		const pilots = db.prepare(query1).all() as { pilot: string; total_hours: number }[];
+		let params: string[] = [];
 
-		// If we want the breakdown by aircraft too, we can use a second query
-		let query2 =
-			'SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours FROM flights f JOIN members m ON f.pilot = m.id GROUP BY pilot, aircraft';
+		if (month) {
+			query += " WHERE strftime('%m', f.depart_date) = ?";
+			params.push(month.padStart(2, '0')); // Ensure the month is two digits
+		}
 
-		// Execute the query for aircraft breakdown
-		const flights = db.prepare(query2).all() as {
-			pilot: string;
-			aircraft: string;
-			aircraft_hours: number;
-		}[];
+		query += ' GROUP BY m.display_name, f.aircraft ORDER BY SUM(f.hours) DESC';
 
-		// Combine both results: We map each pilot's total hours with their respective aircraft breakdown
-		const combinedResults = pilots.map((pilot) => ({
-			...(typeof pilot === 'object' && pilot !== null ? pilot : {}),
-			aircrafts: flights.filter((flight) => flight.pilot === pilot.pilot)
-		}));
+		const flights = db.prepare(query).all(...params) as Flight[];
+
+		// Combine the results so that each pilot has multiple aircrafts (if applicable)
+		const combinedResults = flights.reduce(
+			(
+				acc: {
+					pilot: string;
+					total_hours: number;
+					aircrafts: { aircraft: string; aircraft_hours: number }[];
+				}[],
+				flight
+			) => {
+				const existingPilot = acc.find((p) => p.pilot === flight.pilot);
+
+				if (existingPilot) {
+					existingPilot.aircrafts.push({
+						aircraft: flight.aircraft,
+						aircraft_hours: flight.aircraft_hours
+					});
+					existingPilot.total_hours += flight.aircraft_hours;
+				} else {
+					acc.push({
+						pilot: flight.pilot,
+						total_hours: flight.aircraft_hours,
+						aircrafts: [{ aircraft: flight.aircraft, aircraft_hours: flight.aircraft_hours }]
+					});
+				}
+
+				return acc;
+			},
+			[]
+		);
+
+		// Sort the combined results by total_hours in descending order
+		combinedResults.sort((a, b) => b.total_hours - a.total_hours);
 
 		return new Response(JSON.stringify(combinedResults), { status: 200 });
 	} catch (error) {
-		console.error('Database connection error:', error); // Log any errors
-		return new Response(JSON.stringify({ error: 'Failed to fetch flights' }), { status: 500 });
+		console.error('Database connection error:', error);
+		return new Response(JSON.stringify({ error: 'Failed to fetch flight hours' }), { status: 500 });
 	}
 }

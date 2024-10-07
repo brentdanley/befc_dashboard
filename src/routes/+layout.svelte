@@ -1,4 +1,5 @@
 <script lang="ts">
+	let { children } = $props();
 	let pageTitle = $state('BEFC Pilot Dashboard');
 </script>
 
@@ -7,8 +8,7 @@
 </header>
 
 <main>
-	<!-- The child content from your specific routes will be automatically inserted here -->
-	<slot />
+	{@render children()}
 </main>
 
 <footer>

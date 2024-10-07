@@ -4,7 +4,7 @@
 	import MonthFilter from '$lib/components/MonthFilter.svelte';
 	import { selectedAircraft } from '$lib/stores';
 
-	let aircraft = $state();
+	let aircraft = $state('');
 
 	$effect(() => {
 		selectedAircraft.subscribe((value) => {
@@ -15,4 +15,4 @@
 
 <AircraftFilter />
 <MonthFilter />
-<Flights {aircraft} month={1} />
+<Flights />

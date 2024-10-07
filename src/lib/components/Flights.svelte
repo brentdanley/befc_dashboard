@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { selectedAircraft, selectedMonth } from '$lib/stores';
+	import { months } from '$lib/constants';
 
 	type Flight = {
 		pilot: string;
@@ -13,8 +14,8 @@
 
 	async function fetchFlights() {
 		const query = new URLSearchParams({
-			aircraft: aircraft as string,
-			month: month?.toString() || '3'
+			aircraft: (aircraft as string) || '',
+			month: month?.toString() || ''
 		}).toString();
 
 		const res = await fetch(`/api/flights?${query}`);
@@ -22,10 +23,19 @@
 	}
 
 	$effect(() => {
-		selectedAircraft.subscribe((value) => (aircraft = value));
-		selectedMonth.subscribe((value) => (month = value));
-		console.log('month in flights: ', month);
-		fetchFlights();
+		selectedAircraft.subscribe((value) => {
+			if (aircraft !== value) {
+				aircraft = value;
+				fetchFlights(); // Only fetch when aircraft changes
+			}
+		});
+
+		selectedMonth.subscribe((value) => {
+			if (month !== value) {
+				month = value;
+				fetchFlights(); // Only fetch when month changes
+			}
+		});
 	});
 
 	const aircraftColors: { [key: string]: string } = {
@@ -54,10 +64,14 @@
 		const totalBarWidth = (pilotTotalHours / maxTotalHours) * maxWidth;
 		return (aircraftHours / pilotTotalHours) * totalBarWidth;
 	}
+
+	const getMonthName = (month: number) => months.find((m) => m.value === month)?.name;
 </script>
 
 <div class="flight-hours-wrapper">
-	<h3 class="heading">Pilot Flight Hours</h3>
+	<h3 class="heading">
+		Pilot Flight Hours{month !== null ? ' for ' + getMonthName(month) : ''}
+	</h3>
 	<table class="flight-hours-table">
 		<thead>
 			<tr class="header-row">
