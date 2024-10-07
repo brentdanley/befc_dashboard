@@ -1,6 +1,17 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { selectedMonth } from '$lib/stores';
 	import { months } from '$lib/constants';
+
+	let availableMonths: number[] = [];
+
+	// Fetch available months when the component mounts
+	onMount(async () => {
+		const response = await fetch('/api/flight-months');
+		const data = await response.json();
+		availableMonths = data.map((item: { month: string }) => parseInt(item.month)); // Assuming 'month' is a string like '01', '02', etc.
+		selectedMonth.set(null);
+	});
 
 	// Function to select the month
 	function selectMonth(month: number | null) {
@@ -9,15 +20,17 @@
 </script>
 
 <div class="month-filter">
-	{#each months as month}
-		<button
-			class={$selectedMonth === month.value ? 'selected' : ''}
-			onclick={() => selectMonth(month.value)}
-		>
-			{month.name}
-		</button>
+	{#each months as month, index}
+		{#if availableMonths.includes(index + 1)}
+			<button
+				class={$selectedMonth === month.value ? 'selected' : ''}
+				onclick={() => selectMonth(index + 1)}
+			>
+				{month.name}
+			</button>
+		{/if}
 	{/each}
-	<button class={selectedMonth === null ? 'selected' : ''} onclick={() => selectMonth(null)}
+	<button class={$selectedMonth === null ? 'selected' : ''} onclick={() => selectMonth(null)}
 		>All</button
 	>
 </div>

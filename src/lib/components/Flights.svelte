@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { selectedAircraft, selectedMonth } from '$lib/stores';
 	import { months } from '$lib/constants';
+	import { onMount } from 'svelte';
 
 	type Flight = {
 		pilot: string;
@@ -21,6 +22,10 @@
 		const res = await fetch(`/api/flights?${query}`);
 		flights = await res.json();
 	}
+
+	onMount(() => {
+		fetchFlights();
+	});
 
 	$effect(() => {
 		selectedAircraft.subscribe((value) => {

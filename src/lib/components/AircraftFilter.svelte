@@ -1,6 +1,7 @@
 <!-- AircraftFilter.svelte -->
 <script lang="ts">
 	import { selectedAircraft } from '$lib/stores';
+	import { onMount } from 'svelte';
 	let aircraft = $state('');
 
 	// Function to update the selected aircraft
