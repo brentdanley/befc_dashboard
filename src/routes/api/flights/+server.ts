@@ -1,4 +1,4 @@
-import db from '$lib/db';
+import { sql } from '@vercel/postgres';
 
 type Flight = { pilot: string; aircraft: string; aircraft_hours: number };
 
@@ -10,20 +10,20 @@ export async function GET({ url }) {
 		if (aircraft) {
 			// Case when an aircraft is selected, optionally filter by month
 			let query = `SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours 
-                         FROM flights f 
-                         JOIN members m ON f.pilot = m.id 
-                         WHERE f.aircraft = ?`;
+                   FROM flights f 
+                   JOIN members m ON f.pilot = m.id 
+                   WHERE f.aircraft = $1`;
 
 			let params = [aircraft];
 
 			if (month) {
-				query += " AND strftime('%m', f.depart_date) = ?";
+				query += " AND TO_CHAR(f.depart_date, 'MM') = $2";
 				params.push(month.padStart(2, '0')); // Ensure the month is two digits
 			}
 
 			query += ' GROUP BY m.display_name, f.aircraft ORDER BY aircraft_hours DESC';
 
-			const flights = db.prepare(query).all(...params) as Flight[];
+			const { rows: flights } = await sql.query(query, params);
 
 			const combinedResults = flights.reduce(
 				(
@@ -66,19 +66,19 @@ export async function GET({ url }) {
 
 		// Case when no specific aircraft is selected, optionally filter by month
 		let query = `SELECT m.display_name AS pilot, f.aircraft, SUM(f.hours) AS aircraft_hours 
-                     FROM flights f 
-                     JOIN members m ON f.pilot = m.id`;
+                 FROM flights f 
+                 JOIN members m ON f.pilot = m.id`;
 
 		let params: string[] = [];
 
 		if (month) {
-			query += " WHERE strftime('%m', f.depart_date) = ?";
+			query += " WHERE TO_CHAR(f.depart_date, 'MM') = $1";
 			params.push(month.padStart(2, '0')); // Ensure the month is two digits
 		}
 
 		query += ' GROUP BY m.display_name, f.aircraft ORDER BY SUM(f.hours) DESC';
 
-		const flights = db.prepare(query).all(...params) as Flight[];
+		const { rows: flights } = await sql.query(query, params);
 
 		// Combine the results so that each pilot has multiple aircrafts (if applicable)
 		const combinedResults = flights.reduce(
