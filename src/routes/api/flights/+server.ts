@@ -45,14 +45,17 @@ export async function GET({ url }) {
 			if (existingPilot) {
 				existingPilot.aircrafts.push({
 					aircraft: flight.aircraft,
-					aircraft_hours: flight.aircraft_hours
+					aircraft_hours: parseFloat(flight.aircraft_hours)
 				});
-				existingPilot.total_hours += flight.aircraft_hours;
+				existingPilot.total_hours =
+					parseFloat(existingPilot.total_hours) + parseFloat(flight.aircraft_hours);
 			} else {
 				acc.push({
 					pilot: flight.pilot,
-					total_hours: flight.aircraft_hours,
-					aircrafts: [{ aircraft: flight.aircraft, aircraft_hours: flight.aircraft_hours }]
+					total_hours: parseFloat(flight.aircraft_hours),
+					aircrafts: [
+						{ aircraft: flight.aircraft, aircraft_hours: parseFloat(flight.aircraft_hours) }
+					]
 				});
 			}
 

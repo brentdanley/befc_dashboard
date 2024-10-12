@@ -96,7 +96,7 @@
 						<td>{pilot.pilot}</td>
 						<td>
 							<div class="bar-container">
-								{#each pilot.aircraft as aircraft}
+								{#each pilot.aircrafts as aircraft}
 									<div
 										class="bar"
 										style="background-color: {aircraftColors[
