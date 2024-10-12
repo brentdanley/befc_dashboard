@@ -1,11 +1,13 @@
-// API returns array of months for which their are records in the flights table
-import db from '$lib/db';
+// API returns array of months for which there are records in the flights table
+import { sql } from '@vercel/postgres';
 
 export async function GET() {
 	try {
-		const months = db
-			.prepare("SELECT DISTINCT strftime('%m', depart_date) AS month FROM flights ORDER BY month")
-			.all();
+		const { rows: months } = await sql`
+            SELECT DISTINCT TO_CHAR(depart_date, 'MM') AS month
+            FROM flights
+            ORDER BY month
+        `;
 
 		return new Response(JSON.stringify(months), { status: 200 });
 	} catch (error) {

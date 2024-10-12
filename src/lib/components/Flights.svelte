@@ -3,10 +3,15 @@
 	import { months } from '$lib/constants';
 	import { onMount } from 'svelte';
 
+	type Aircraft = {
+		aircraft: string;
+		aircraft_hours: number;
+	};
+
 	type Flight = {
 		pilot: string;
 		total_hours: number;
-		aircraft: string;
+		aircraft: Aircraft[];
 	};
 
 	let flights = $state<Flight[]>([]);
@@ -91,7 +96,7 @@
 						<td>{pilot.pilot}</td>
 						<td>
 							<div class="bar-container">
-								{#each pilot.aircrafts as aircraft}
+								{#each pilot.aircraft as aircraft}
 									<div
 										class="bar"
 										style="background-color: {aircraftColors[
