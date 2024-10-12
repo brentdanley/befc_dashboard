@@ -82,40 +82,44 @@
 	<h3 class="heading">
 		Pilot Flight Hours{month !== null ? ' for ' + getMonthName(month) : ''}
 	</h3>
-	<table class="flight-hours-table">
-		<thead>
-			<tr class="header-row">
-				<th>Pilot</th>
-				<th>Hours</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each flights as pilot}
-				{#if pilot.pilot}
-					<tr>
-						<td>{pilot.pilot}</td>
-						<td>
-							<div class="bar-container">
-								{#each pilot.aircrafts as aircraft}
-									<div
-										class="bar"
-										style="background-color: {aircraftColors[
-											aircraft.aircraft
-										]}; width: {calculateSegmentWidth(
-											aircraft.aircraft_hours,
-											pilot.total_hours
-										)}px;"
-									></div>
-								{/each}
-								<span class="hours-label">{pilot.total_hours.toFixed(1)}</span>
-								<!-- Label moved here -->
-							</div>
-						</td>
-					</tr>
-				{/if}
-			{/each}
-		</tbody>
-	</table>
+	{#if flights.length === 0}
+		<p>There are no flight hours</p>
+	{:else}
+		<table class="flight-hours-table">
+			<thead>
+				<tr class="header-row">
+					<th>Pilot</th>
+					<th>Hours</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each flights as pilot}
+					{#if pilot.pilot}
+						<tr>
+							<td>{pilot.pilot}</td>
+							<td>
+								<div class="bar-container">
+									{#each pilot.aircrafts as aircraft}
+										<div
+											class="bar"
+											style="background-color: {aircraftColors[
+												aircraft.aircraft
+											]}; width: {calculateSegmentWidth(
+												aircraft.aircraft_hours,
+												pilot.total_hours
+											)}px;"
+										></div>
+									{/each}
+									<span class="hours-label">{pilot.total_hours.toFixed(1)}</span>
+									<!-- Label moved here -->
+								</div>
+							</td>
+						</tr>
+					{/if}
+				{/each}
+			</tbody>
+		</table>
+	{/if}
 </div>
 
 <style>
