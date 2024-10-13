@@ -1,7 +1,7 @@
 <!-- AircraftFilter.svelte -->
 <script lang="ts">
 	import { selectedAircraft } from '$lib/stores';
-	import { onMount } from 'svelte';
+	import { aircraftColors } from '../../utils/aicraftUtils';
 	let aircraft = $state('');
 
 	// Function to update the selected aircraft
@@ -18,11 +18,13 @@
 	<button
 		class:selected={aircraft === 'N8181N'}
 		class="button-n8181n"
+		style="background-color: {aircraftColors.N8181N}"
 		onclick={() => selectAircraft('N8181N')}>8181N</button
 	>
 	<button
 		class:selected={aircraft === 'N4818D'}
 		class="button-n4818d"
+		style="background-color: {aircraftColors.N4818D}"
 		onclick={() => selectAircraft('N4818D')}>4818D</button
 	>
 	<button class:selected={aircraft === ''} class="button-all" onclick={() => selectAircraft('')}
@@ -54,12 +56,10 @@
 			background-color: white;
 		}
 		.button-n4818d {
-			background-color: #1e90ff;
 			color: white;
 		}
 
 		.button-n8181n {
-			background-color: #ff6347;
 			color: white;
 		}
 		.selected {

@@ -2,6 +2,7 @@
 	import { selectedAircraft, selectedMonth } from '$lib/stores';
 	import { months } from '$lib/constants';
 	import { onMount } from 'svelte';
+	import { aircraftColors } from '../../utils/aicraftUtils';
 
 	type Aircraft = {
 		aircraft: string;
@@ -47,11 +48,6 @@
 			}
 		});
 	});
-
-	const aircraftColors: { [key: string]: string } = {
-		N8181N: '#ff6347', // Red
-		N4818D: '#1e90ff' // Blue
-	};
 
 	// Function to calculate the segment width for each aircraft
 	function calculateSegmentWidth(

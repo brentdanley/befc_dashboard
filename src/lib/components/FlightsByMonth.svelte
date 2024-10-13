@@ -7,6 +7,7 @@
 	import * as d3 from 'd3';
 
 	import { selectedAircraft } from '$lib/stores';
+	import { aircraftColors } from '../../utils/aicraftUtils';
 
 	type FlightsByMonth = {
 		aircraft: string;
@@ -45,11 +46,6 @@
 			drawChart();
 		});
 	});
-
-	const aircraftColors: { [key: string]: string } = {
-		N8181N: '#ff6347', // Red
-		N4818D: '#1e90ff' // Blue
-	};
 
 	function drawChart() {
 		// Clear existing SVG if any
