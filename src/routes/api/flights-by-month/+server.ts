@@ -1,10 +1,28 @@
-// API returns array of months for which there are records in the flights table
 import { sql } from '@vercel/postgres';
 
-export async function GET() {
+export async function GET({ url }) {
 	try {
-		const { rows: months } = await sql`
-        SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, SUM(hours) AS total_hours FROM flights GROUP BY aircraft, month ORDER BY month, aircraft`;
+		const aircraft = url.searchParams.get('aircraft');
+
+		let query;
+		if (aircraft) {
+			// If an aircraft is specified, filter by it
+			query = sql`
+                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, SUM(hours) AS total_hours 
+                FROM flights 
+                WHERE aircraft = ${aircraft}
+                GROUP BY aircraft, month 
+                ORDER BY month, aircraft`;
+		} else {
+			// Otherwise, return all aircraft
+			query = sql`
+                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, SUM(hours) AS total_hours 
+                FROM flights 
+                GROUP BY aircraft, month 
+                ORDER BY month, aircraft`;
+		}
+
+		const { rows: months } = await query;
 
 		return new Response(JSON.stringify(months), { status: 200 });
 	} catch (error) {

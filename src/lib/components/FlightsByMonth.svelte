@@ -39,10 +39,8 @@
 	};
 
 	$effect(() => {
-		const aircraft = selectedAircraft;
-
-		getMonths(aircraft).then(async (data) => {
-			flightData = data;
+		selectedAircraft.subscribe(async (aircraft) => {
+			flightData = await getMonths(aircraft);
 			planes = aircraft ? [aircraft] : await getAircrafts();
 			drawChart();
 		});
