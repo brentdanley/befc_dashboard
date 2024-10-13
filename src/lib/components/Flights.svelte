@@ -124,7 +124,6 @@
 
 <style>
 	.flight-hours-wrapper {
-		margin: 2rem;
 		border: 2px solid black;
 		padding: 2rem;
 		display: inline-block;
