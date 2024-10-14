@@ -5,3 +5,4 @@ export const selectedAircraft = writable('');
 export const selectedPilot = writable('');
 export const selectedMonth = writable<number | null>(null);
 export const dateRange = writable({ start: null, end: null });
+export const showCharts = writable<{ [key: string]: boolean }>({ 'flight-hours': true });

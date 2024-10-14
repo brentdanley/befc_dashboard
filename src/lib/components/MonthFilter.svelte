@@ -37,7 +37,6 @@
 
 <style>
 	.month-filter {
-		margin: 2rem auto 1rem 0;
 		button {
 			margin-right: 10px;
 			padding: 8px;
