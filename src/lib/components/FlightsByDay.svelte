@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { scaleBand, scaleLinear } from 'd3-scale';
 	import { max } from 'd3-array';
 	import { select } from 'd3-selection';
@@ -8,13 +9,13 @@
 	import { selectedAircraft } from '$lib/stores';
 	import { aircraftColors } from '../../utils/aicraftUtils';
 
-	type FlightsByMonth = {
+	type FlightsByDay = {
 		aircraft: string;
-		month: string;
+		day_of_week: string;
 		total_hours: number;
 	};
 
-	let flightData: FlightsByMonth[] = [];
+	let flightData: FlightsByDay[] = [];
 	let planes: string[] = [];
 
 	let svgWidth = 800;
@@ -25,8 +26,8 @@
 
 	let svg;
 
-	const getMonths = async (aircraft?: string) => {
-		const url = aircraft ? `/api/flights-by-month?aircraft=${aircraft}` : `/api/flights-by-month`;
+	const getFlightsByDay = async (aircraft?: string) => {
+		const url = aircraft ? `/api/flights-by-day?aircraft=${aircraft}` : `/api/flights-by-day`;
 		const response = await fetch(url);
 		const data = await response.json();
 		return data;
@@ -40,7 +41,7 @@
 
 	$effect(() => {
 		selectedAircraft.subscribe(async (aircraft) => {
-			flightData = await getMonths(aircraft);
+			flightData = await getFlightsByDay(aircraft);
 			planes = aircraft ? [aircraft] : await getAircrafts();
 			drawChart();
 		});
@@ -48,11 +49,11 @@
 
 	function drawChart() {
 		// Clear existing SVG if any
-		select('#flights-by-month-chart').selectAll('svg').remove();
+		select('#flights-by-day-chart').selectAll('svg').remove();
 
 		// Set up scales
 		const x0 = scaleBand()
-			.domain(flightData.map((d) => d.month))
+			.domain(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'])
 			.rangeRound([0, width])
 			.paddingInner(0.1);
 
@@ -71,8 +72,8 @@
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
-		// Group data by month
-		const groupedData = d3.group(flightData, (d) => d.month);
+		// Group data by day of the week
+		const groupedData = d3.group(flightData, (d) => d.day_of_week);
 
 		// Draw bars
 		svg
@@ -81,7 +82,7 @@
 			.enter()
 			.append('g')
 			.attr('class', 'bar-group')
-			.attr('transform', ([month]) => `translate(${x0(month)},0)`)
+			.attr('transform', ([day]) => `translate(${x0(day)},0)`)
 			.selectAll('rect')
 			.data(([, values]) => values)
 			.enter()
@@ -92,21 +93,12 @@
 			.attr('height', (d) => (isNaN(y(d.total_hours)) ? 0 : height - y(d.total_hours)))
 			.attr('fill', (d) => aircraftColors[d.aircraft] || '#ccc');
 
-		// Draw X axis with formatted labels
+		// Draw X axis
 		svg
 			.append('g')
 			.attr('class', 'x-axis')
 			.attr('transform', `translate(0,${height})`)
-			.call(
-				axisBottom(x0).tickFormat((d) => {
-					// Extract year and month from the string (assuming format is YYYY-MM-DD)
-					const [year, month] = d.split('-');
-					// Convert month number to month name (e.g., 01 -> "Jan")
-					const date = new Date(parseInt(year), parseInt(month) - 1); // month is 0-indexed here
-					return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-				})
-			)
-
+			.call(axisBottom(x0))
 			.selectAll('text')
 			.style('text-anchor', 'end')
 			.attr('dx', '-0.8em')
@@ -119,8 +111,8 @@
 </script>
 
 <div class="wrapper">
-	<h2>Aircraft Utilization by Month</h2>
-	<div id="flights-by-month-chart"></div>
+	<h2>Aircraft Utilization by Day of the Week</h2>
+	<div id="flights-by-day-chart"></div>
 </div>
 
 <style>
