@@ -11,7 +11,7 @@
 	type FlightsByMonth = {
 		aircraft: string;
 		month: string;
-		total_hours: number;
+		total_flights: number;
 	};
 
 	let flightData: FlightsByMonth[] = [];
@@ -59,7 +59,7 @@
 		const x1 = scaleBand().domain(planes).rangeRound([0, x0.bandwidth()]).padding(0.05);
 
 		const y = scaleLinear()
-			.domain([0, max(flightData, (d) => parseFloat(d.total_hours.toString())) || 0])
+			.domain([0, max(flightData, (d) => parseFloat(d.total_flights.toString())) || 0])
 			.nice()
 			.range([height, 0]);
 
@@ -87,9 +87,9 @@
 			.enter()
 			.append('rect')
 			.attr('x', (d) => x1(d.aircraft) ?? 0)
-			.attr('y', (d) => (isNaN(y(d.total_hours)) ? 0 : y(d.total_hours)))
+			.attr('y', (d) => (isNaN(y(d.total_flights)) ? 0 : y(d.total_flights)))
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => (isNaN(y(d.total_hours)) ? 0 : height - y(d.total_hours)))
+			.attr('height', (d) => (isNaN(y(d.total_flights)) ? 0 : height - y(d.total_flights)))
 			.attr('fill', (d) => aircraftColors[d.aircraft] || '#ccc');
 
 		// Draw X axis with formatted labels
@@ -119,7 +119,7 @@
 </script>
 
 <div class="wrapper">
-	<h2>Aircraft Utilization by Month</h2>
+	<h2>Flights by Month</h2>
 	<div id="flights-by-month-chart"></div>
 </div>
 

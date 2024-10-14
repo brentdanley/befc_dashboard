@@ -5,17 +5,19 @@
 	import { axisBottom, axisLeft } from 'd3-axis';
 	import * as d3 from 'd3';
 
-	import { selectedAircraft } from '$lib/stores';
+	import { selectedAircraft, selectedMonth } from '$lib/stores';
 	import { aircraftColors } from '../../utils/aicraftUtils';
 
 	type FlightsByDay = {
 		aircraft: string;
 		day_of_week: string;
-		total_hours: number;
+		total_flights: number;
 	};
 
 	let flightData: FlightsByDay[] = [];
 	let planes: string[] = [];
+	let aircraft = $state<string | undefined>('');
+	let month = $state<number | undefined>();
 
 	let svgWidth = 800;
 	let svgHeight = 400;
@@ -25,8 +27,10 @@
 
 	let svg;
 
-	const getFlightsByDay = async (aircraft?: string) => {
-		const url = aircraft ? `/api/flights-by-day?aircraft=${aircraft}` : `/api/flights-by-day`;
+	const getFlightsByDay = async (aircraft?: string, month?: string) => {
+		const url = aircraft
+			? `/api/flights-by-day?aircraft=${aircraft}&month=${month}`
+			: `/api/flights-by-day?month=${month}`;
 		const response = await fetch(url);
 		const data = await response.json();
 		return data;
@@ -39,11 +43,29 @@
 	};
 
 	$effect(() => {
-		selectedAircraft.subscribe(async (aircraft) => {
-			flightData = await getFlightsByDay(aircraft);
-			planes = aircraft ? [aircraft] : await getAircrafts();
-			drawChart();
+		// Subscribe to both stores independently
+		selectedAircraft.subscribe((value) => {
+			aircraft = value;
+			updateFlightData();
 		});
+
+		selectedMonth.subscribe((value) => {
+			month = value !== null ? value : undefined;
+			updateFlightData();
+		});
+
+		// Function to update flight data and draw the chart
+		async function updateFlightData() {
+			flightData = await getFlightsByDay(aircraft, month?.toString());
+			planes = aircraft ? [aircraft] : await getAircrafts();
+
+			if (!planes.length) {
+				console.error('Planes array is empty. Cannot draw chart.');
+				return;
+			}
+
+			drawChart();
+		}
 	});
 
 	function drawChart() {
@@ -56,10 +78,15 @@
 			.rangeRound([0, width])
 			.paddingInner(0.1);
 
+		if (!planes.length) {
+			console.error('Planes array is empty. Cannot draw chart.');
+			return;
+		}
+
 		const x1 = scaleBand().domain(planes).rangeRound([0, x0.bandwidth()]).padding(0.05);
 
 		const y = scaleLinear()
-			.domain([0, max(flightData, (d) => parseFloat(d.total_hours.toString())) || 0])
+			.domain([0, max(flightData, (d) => parseFloat(d.total_flights.toString())) || 0])
 			.nice()
 			.range([height, 0]);
 
@@ -72,7 +99,9 @@
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
 		// Group data by day of the week
-		const groupedData = d3.group(flightData, (d) => d.day_of_week);
+		const groupedData = Array.from(d3.group(flightData, (d) => d.day_of_week.trim()))
+			.filter(([day]) => x0(day) !== undefined)
+			.filter(([day]) => x0(day) !== undefined);
 
 		// Draw bars
 		svg
@@ -81,15 +110,21 @@
 			.enter()
 			.append('g')
 			.attr('class', 'bar-group')
-			.attr('transform', ([day]) => `translate(${x0(day)},0)`)
+			.attr('transform', ([day]) => {
+				const xPosition = x0(day);
+				if (xPosition === undefined) {
+					console.error(`Day '${day}' is not recognized in the x-axis domain.`);
+				}
+				return `translate(${xPosition ?? 0},0)`;
+			})
 			.selectAll('rect')
 			.data(([, values]) => values)
 			.enter()
 			.append('rect')
 			.attr('x', (d) => x1(d.aircraft) ?? 0)
-			.attr('y', (d) => (isNaN(y(d.total_hours)) ? 0 : y(d.total_hours)))
+			.attr('y', (d) => (isNaN(y(d.total_flights)) ? 0 : y(d.total_flights)))
 			.attr('width', x1.bandwidth())
-			.attr('height', (d) => (isNaN(y(d.total_hours)) ? 0 : height - y(d.total_hours)))
+			.attr('height', (d) => (isNaN(y(d.total_flights)) ? 0 : height - y(d.total_flights)))
 			.attr('fill', (d) => aircraftColors[d.aircraft] || '#ccc');
 
 		// Draw X axis
@@ -110,7 +145,7 @@
 </script>
 
 <div class="wrapper">
-	<h2>Aircraft Utilization by Day of the Week</h2>
+	<h2>Flights by Day of the Week</h2>
 	<div id="flights-by-day-chart"></div>
 </div>
 

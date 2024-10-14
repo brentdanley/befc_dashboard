@@ -8,7 +8,7 @@ export async function GET({ url }) {
 		if (aircraft) {
 			// If an aircraft is specified, filter by it
 			query = sql`
-                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, SUM(hours) AS total_hours 
+                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, COUNT(*) as total_flights
                 FROM flights 
                 WHERE aircraft = ${aircraft}
                 GROUP BY aircraft, month 
@@ -16,7 +16,7 @@ export async function GET({ url }) {
 		} else {
 			// Otherwise, return all aircraft
 			query = sql`
-                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, SUM(hours) AS total_hours 
+                SELECT aircraft, DATE_TRUNC('month', depart_date) AS month, COUNT(*) as total_flights
                 FROM flights 
                 GROUP BY aircraft, month 
                 ORDER BY month, aircraft`;
