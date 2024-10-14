@@ -64,7 +64,7 @@
 			.range([height, 0]);
 
 		// Set up SVG container
-		svg = select('#chart')
+		svg = select('#flights-by-month-chart')
 			.append('svg')
 			.attr('width', svgWidth)
 			.attr('height', svgHeight)

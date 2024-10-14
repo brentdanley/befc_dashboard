@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { scaleBand, scaleLinear } from 'd3-scale';
 	import { max } from 'd3-array';
 	import { select } from 'd3-selection';
@@ -65,7 +64,7 @@
 			.range([height, 0]);
 
 		// Set up SVG container
-		svg = select('#chart')
+		svg = select('#flights-by-day-chart')
 			.append('svg')
 			.attr('width', svgWidth)
 			.attr('height', svgHeight)
